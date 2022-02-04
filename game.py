@@ -1,4 +1,5 @@
 from __future__ import unicode_literals
+from display import Display
 from setup import config
 from unidecode import unidecode
 from datetime import datetime, timedelta
@@ -7,16 +8,20 @@ import random
 
 class Game:
     def __init__(self, tweet_id, player_id):
-        self.id = tweet_id
+        self.__id = tweet_id
         self.__player_id = player_id
         self.__current_tweet = tweet_id
         self.__time_limit = datetime.today() + timedelta(60)
 
         self.__answer = random.choice(config["word-list"])
+        print(self.__answer)
+
         self.__wrong = set()
         self.__wrong_place = set()
         self.__correct = set()
         self.__guesses = []
+        self.__matrix = []
+        self.__display = Display(self.__matrix)
         self.__attempts = 0
 
     def get_data(self):
@@ -30,6 +35,7 @@ class Game:
             "correct": self.__correct,
             "wrong-place": self.__wrong_place,
             "guesses": self.__guesses,
+            "matrix": self.__matrix,
             "attempts": self.__attempts,
         }
         return data
@@ -45,6 +51,7 @@ class Game:
         self.__wrong_place = data["wrong-place"]
         self.__correct = data["correct"]
         self.__guesses = data["guesses"]
+        self.__matrix = data["matrix"]
         self.__attempts = data["attempts"]
 
     @property
@@ -60,8 +67,8 @@ class Game:
         return self.__time_limit
 
     @property
-    def current_tweet(self):
-        return self.__current_tweet
+    def current_tweet(self, new_tweet):
+        self.__current_tweet = new_tweet
 
     @current_tweet.setter
     def current_tweet(self, new_tweet_id):
@@ -102,19 +109,30 @@ class Game:
         if not guess.isalpha() or len(guess) != 5:
             return False
 
+        self.__matrix.append([])
+
+        self.__guesses.append(guess)
+
         for index, letter in enumerate(guess):
             if letter == answer[index]:
                 self.__correct.add(letter)
+                last = len(self.__guesses) - 1
+                self.__matrix[last].append((letter, "c"))
             elif letter in answer:
                 self.__wrong_place.add(letter)
+                last = len(self.__guesses) - 1
+                self.__matrix[last].append((letter, "w"))
             else:
                 self.__wrong.add(letter)
+                last = len(self.__guesses) - 1
+                self.__matrix[last].append((letter, "wp"))
+
+        self.__attempts += 1
 
         return True
 
-    def play(self, guess):  
+    def play(self, guess):
         is_valid = self.__check_guess(guess)
 
-        if self.__check_guess(guess):
-            self.__guesses.append(guess)
-            self.__attempts += 1
+        if is_valid:
+            self.__display.update(self.__matrix)
