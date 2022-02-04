@@ -4,3 +4,4 @@ logs.log
 test.py
 display.png
 venv
+__pycache__
