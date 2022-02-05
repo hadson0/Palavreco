@@ -14,17 +14,23 @@ class Game:
         self.__time_limit = datetime.today() + timedelta(60)
 
         self.__answer = random.choice(config["word-list"])
-        print(self.__answer)
 
         self.__wrong = set()
         self.__wrong_place = set()
         self.__correct = set()
         self.__guesses = []
         self.__matrix = []
-        self.__display = Display(self.__matrix)
         self.__attempts = 0
 
+        self.__display = Display(self.__matrix)
+
     def get_data(self):
+        """Create a dict with the game attributes data.
+
+        Returns:
+            dict: Game data.
+        """
+
         data = {
             "id": self.id,
             "player-id": self.__player_id,
@@ -41,6 +47,12 @@ class Game:
         return data
 
     def set_data(self, data):
+        """Gets the data from the argument and sets it to the game attributes.
+
+        Args:
+            data (dict): Game data.
+        """
+
         self.__id = data["origin-tweet"]
         self.__player_id = data["player-id"]
         self.__current_tweet = data["current-tweet"]
@@ -92,47 +104,43 @@ class Game:
             ended = True
         return ended
 
-    def __check_guess(self, guess):
-        """Checks if the guess is valid, if so, classifies each letter as "wrong", "wrong place" or "correct".
+    def is_valid_guess(self, guess):
+        """Checks if the guess has 5 alphabetical letters."""
+
+        is_valid = False
+
+        if guess.isalpha() and len(guess) == 5:
+            is_valid = True
+
+        return is_valid
+
+    def play(self, guess):
+        """If the guess is valid, saves and classifies it, then updates the display.
 
         Args:
-            guess (str)
-
-        Returns:
-            True: If the guess is valid
-            False: If the guess is invalid
+            guess (str): 5 letters word
         """
+
+        if not self.is_valid_guess(guess):
+            return
 
         answer = unidecode(self.__answer)
         guess = unidecode(guess.lower())
 
-        if not guess.isalpha() or len(guess) != 5:
-            return False
-
         self.__matrix.append([])
-
         self.__guesses.append(guess)
 
+        # Classifies the letter as correct, wrong or wrong place
         for index, letter in enumerate(guess):
-            if letter == answer[index]:
+            if letter == answer[index]:  # If it is the same letter, then it is "correct"
                 self.__correct.add(letter)
-                last = len(self.__guesses) - 1
-                self.__matrix[last].append((letter, "c"))
-            elif letter in answer:
+                self.__matrix[-1].append((letter, "c"))
+            elif letter in answer:  # If it is a answer letter, then it is "wrong place"
                 self.__wrong_place.add(letter)
-                last = len(self.__guesses) - 1
-                self.__matrix[last].append((letter, "w"))
-            else:
+                self.__matrix[-1].append((letter, "w"))
+            else:  # If none of the above , then it is "wrong"
                 self.__wrong.add(letter)
-                last = len(self.__guesses) - 1
-                self.__matrix[last].append((letter, "wp"))
+                self.__matrix[-1].append((letter, "wp"))
 
         self.__attempts += 1
-
-        return True
-
-    def play(self, guess):
-        is_valid = self.__check_guess(guess)
-
-        if is_valid:
-            self.__display.update(self.__matrix)
+        self.__display.update(self.__matrix)
