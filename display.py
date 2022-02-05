@@ -23,7 +23,7 @@ class Display:
         Returns:
             Text box image.
         """
-        
+
         letter = letter_tuple[0].upper()
         tag = letter_tuple[1]
 
@@ -37,8 +37,10 @@ class Display:
         draw = ImageDraw.Draw(box)
 
         bw, bh = box.size  # (box width, box height)
-        lw, lh = draw.textsize(letter, font=self.__font)  # (letter width, letter height)
-        letter_coord = ((bw - lw)/2, (bh - lh - 17)/2)  # Centralized letter coord
+        # (letter width, letter height)
+        lw, lh = draw.textsize(letter, font=self.__font)
+        # Centralized letter coord
+        letter_coord = ((bw - lw)/2, (bh - lh - 17)/2)
 
         draw.text(letter_coord, letter,
                   font=self.__font, fill="white")
