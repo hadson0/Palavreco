@@ -16,7 +16,7 @@ stream_handler.setFormatter(formatter)
 logger.addHandler(file_handler)
 logger.addHandler(stream_handler)
 
-with open("config.json") as config_file:
+with open(r"data/config.json") as config_file:
     config = json.load(config_file)
 
 
