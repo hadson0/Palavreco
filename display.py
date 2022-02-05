@@ -4,8 +4,6 @@ from PIL import Image, ImageFont, ImageDraw
 
 class Display:
     def __init__(self, matrix):
-        self.__matrix = matrix
-
         self.__background = Image.open(r"assets/background.png")
         self.__border = Image.open(r"assets/border.png")
         self.__correct = Image.open(r"assets/correct.png")
@@ -15,41 +13,60 @@ class Display:
 
         self.update(matrix)
 
+    def __draw_box(self, letter_tuple):
+        """Draw a colored text box.
+
+        Args:
+            letter_tuple (tuple): (letter, tag). 
+            Tag: "c" (correct), "w" (wrong), "wp" (wrong place).
+
+        Returns:
+            Text box image.
+        """
+        
+        letter = letter_tuple[0].upper()
+        tag = letter_tuple[1]
+
+        if tag == "c":
+            box = self.__correct.copy()  # Green box
+        elif tag == "wp":
+            box = self.__wrong.copy()  # Yellow box
+        elif tag == "w":
+            box = self.__wrong_place.copy()  # Grey box
+
+        draw = ImageDraw.Draw(box)
+
+        bw, bh = box.size  # (box width, box height)
+        lw, lh = draw.textsize(letter, font=self.__font)  # (letter width, letter height)
+        letter_coord = ((bw - lw)/2, (bh - lh - 17)/2)  # Centralized letter coord
+
+        draw.text(letter_coord, letter,
+                  font=self.__font, fill="white")
+
+        return box
+
     def update(self, matrix):
-        self.__matrix = matrix
+        """Updates the game display and saves it in assets folder (assets/display.png).
+
+        Args:
+            matrix (dict): A dict of tuples, with a guess letter and a tag.
+            Tag: "c" (correct), "w" (wrong), "wp" (wrong place).
+        """
 
         display = self.__background.copy()
 
-        y = 165
+        y = 165  # Y-coordinate of the first box
         for i in range(6):
-            x = 82
+            x = 82  # X-coordinate of the first box
 
             for j in range(5):
-                if i >= len(matrix):
+                if i >= len(matrix):  # If there isn't more guesses, place empty box
                     display.paste(self.__border, (x, y), mask=self.__border)
-                else:
-                    letter = matrix[i][j][0].upper()
-                    tag = matrix[i][j][1]
+                else:   # Otherwise, place a colored box with the letter
+                    box = self.__draw_box(matrix[i][j])
+                    display.paste(box, (x, y), mask=box)
 
-                    if tag == "c":
-                        block = self.__correct.copy()
-                    elif tag == "wp":
-                        block = self.__wrong.copy()
-                    elif tag == "w":
-                        block = self.__wrong_place.copy()
+                x += 114  # 100 (box width) + 14 (spacing)
+            y += 122  # 100 (box height) + 22 (spacing)
 
-                    draw_block = ImageDraw.Draw(block)
-
-                    w1, h1 = block.size
-                    w2, h2 = draw_block.textsize(letter, font=self.__font)
-                    letter_coord = ((w1 - w2)/2, (h1 - h2 - 17)/2)
-
-                    draw_block.text(letter_coord, letter,
-                                    font=self.__font, fill="white")
-                    display.paste(block, (x, y), mask=block)
-
-                x += 114
-
-            y += 122
-
-        display.save(r"display.png")
+        display.save(r"assets/display.png")
